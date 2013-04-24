@@ -1,6 +1,6 @@
 * Query Parser
   A recursive-descent recognizing parser for a toy search engine query
-  language. The original sepcification for the language has long since
+  language. The original specification for the language has long since
   disappeared, but it looks like the grammar is the following:
   : Query = Whitespace? OrTerm Whitespace?
   : OrTerm = AndTerm { Whitespace "OR" Whitespace AndTerm }*
