@@ -243,7 +243,6 @@ ARGF.each_line do |line|
     tok = lex.nextToken
     puts "[" << (tok[0].to_s) << ", '" << tok[1] << "']"
   end until tok[0] == :unknown or tok[0] == :eof
-  puts "Line is #{line}"
   lex = Lexer.new(line)
   print "Parser/recognizer:"
   tokens = Query.new(lex).parse
