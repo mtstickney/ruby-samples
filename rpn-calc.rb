@@ -108,7 +108,7 @@ def parse(toks)
   return stack.pop() if stack.length == 1
   return nil
 end
-  
+
 
 ARGF.each_line do |line|
   toks = line.split
