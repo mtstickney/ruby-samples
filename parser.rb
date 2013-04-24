@@ -234,7 +234,7 @@ class Query
     return toks
   end
 end
-    
+
 ARGF.each_line do |line|
   puts "Query: " << line
   puts "Full token stream:"
@@ -243,15 +243,17 @@ ARGF.each_line do |line|
     tok = lex.nextToken
     puts "[" << (tok[0].to_s) << ", '" << tok[1] << "']"
   end until tok[0] == :unknown or tok[0] == :eof
+  puts "Line is #{line}"
   lex = Lexer.new(line)
   print "Parser/recognizer:"
   tokens = Query.new(lex).parse
+  next_tok = lex.nextToken
   if not tokens
     print false
     puts ": Recognizer failed"
   elsif next_tok[0] != :eof
     print false
-    puts ": Unexpected tokens at end of input"
+    puts ": Unexpected tokens at end of input (#{next_tok})"
   else
     puts true
   end
