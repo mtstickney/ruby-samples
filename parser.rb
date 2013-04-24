@@ -45,6 +45,40 @@ class Lexer
   end
 end
 
+def unshift_toks(lexer, tokens)
+  tokens.reverse_each { |t| lexer.pushToken(t) }
+  return false
+end
+
+# Read a sequence of tokens or reset the lexer
+def token_seq(lexer, tokens)
+  read_tokens = []
+  tokens.each do |tok|
+    if tok.instance_of?(Symbol)
+      read_tokens << lexer.nextToken
+      return unshift_toks(lexer, read_tokens) unless read_tokens.last[0] == tok
+    elsif tok.instance_of?(Class)
+      toks = tok.new(lexer).parse
+      return unshift_toks(lexer, read_tokens) unless toks
+
+      read_tokens = read_tokens + toks
+    else
+      raise TypeError, 'Token designator is not a Symbol or Class'
+    end
+  end
+
+  return read_tokens
+end
+
+def token_choice(lexer, tokens)
+  tokens.each do |toks|
+    ts = token_seq(lexer, toks)
+    return ts if ts
+  end
+
+  return false
+end
+
 class WordSeq
   def initialize(lexer)
     @lexer = lexer
