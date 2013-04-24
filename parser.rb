@@ -242,15 +242,14 @@ ARGF.each_line do |line|
   begin
     tok = lex.nextToken
     puts "[" << (tok[0].to_s) << ", '" << tok[1] << "']"
-  end until tok[0] == :unknown or tok[0] == :eos
-  
+  end until tok[0] == :unknown or tok[0] == :eof
   lex = Lexer.new(line)
   print "Parser/recognizer:"
   tokens = OrTerm.new(lex).parse
   if not tokens
     print false
     puts ": Recognizer failed"
-  elsif lex.nextToken[0] != :eos
+  elsif next_tok[0] != :eof
     print false
     puts ": Unexpected tokens at end of input"
   else
