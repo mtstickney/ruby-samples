@@ -2,6 +2,20 @@ class Lexer
   def initialize(stream)
     @tokens = []
     @stream = stream
+    # Not a map because we need to preserve ordering
+    @matchtable = [[/^\+/, :include_op],
+                   [/^-/, :exclude_op],
+                   [/^\(/, :lparen],
+                   [/^\)/, :rparen],
+                   [/^"[^"]+"/, :phrase],
+                   [/^\*/, :star_op],
+                   [/^\s+/, :whitespace],
+                   # If AND/OR isn't followed by whitespace, it's just
+                   # a word
+                   [/^AND(?=\s)/, :and],
+                   [/^OR(?=\s)/, :or],
+                   [/^[[:alnum:]@%\$&][[:alnum:]@%\$&]*/, :word],
+                   [/^\z/, :eof]]
   end
 
   def nextToken()
@@ -14,53 +28,16 @@ class Lexer
   end
 
   def streamToken()
-    # Remove leading whitespace
-    @stream = @stream.lstrip
-    if @stream =~ /^\z/
-      return [:eos, '']
+    token = nil
+    @matchtable.each do |entry|
+      if entry[0] =~ @stream
+        token = [entry[1], Regexp.last_match[0]]
+        @stream = @stream[token[1].length..-1]
+        return token
+      end
     end
 
-    token = case @stream
-            when /^\+("[^"]"|[[:alnum:]@\$%&][[:alnum:]@%\$&\-]*)/
-              [:inclusion, Regexp.last_match[0]]
-            when /^-("[^"]"|[[:alnum:]@\$%&][[:alnum:]@%\$&\-]*)/
-              [:exclusion, Regexp.last_match[0]]
-            when /^[[:alnum:]@%\$&][[:alnum:]@%\$&\-]*\*/
-              [:prefixterm, Regexp.last_match[0]]
-            when /^"[^"]+"/
-              [:phrase, Regexp.last_match[0]]
-            when /^AND/
-              [:AND, '']
-            when /^OR/
-              [:OR, '']
-            when /^[[:alnum:]@%\$&][[:alnum:]@%\$&\-]*/
-              [:word, Regexp.last_match[0]]
-            when /^\(/
-              [:lparen, '']
-            when /^\)/
-              [:rparen, '']
-            when /^[^"]+/
-              [:string, Regexp.last_match[0]]
-            when /^[[:alnum:]@%\$&]/
-              [:nothyphen, Regexp.last_match[0]]
-            when /^[[:alnum:]@%\$&]/
-              [:char, Regexp.last_match[0]]
-            else
-              [:unknown, '']
-            end
-    
-    # Erase the matched portion of the stream and any
-    # following whitespace.
-    length = case token[0]
-             when :AND then 3
-             when :OR then 2
-             when :lparen then 1
-             when :rparen then 1
-             else
-               token[1].length
-             end
-    @stream[0, length] = ""
-    return token
+    return [:unknown, '']
   end
 
   def pushToken(tok)
