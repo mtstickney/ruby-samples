@@ -99,10 +99,9 @@ class WordSeq
     tokens = token_seq(@lexer, [:word])
     return false unless tokens
 
-    begin
-      toks = token_seq(@lexer, [:whitespace, :word])
+    while toks = token_seq(@lexer, [:whitespace, :word])
       tokens = tokens + toks[1] if toks
-    end while toks
+    end
 
     return tokens
   end
@@ -194,12 +193,9 @@ class AndTerm
     tokens = token_seq(@lexer, [Term])
     return false unless tokens
 
-    begin
-      next_toks = token_seq(@lexer, [:whitespace, :and, :whitespace, AndTerm])
-      return tokens if not next_toks
-
+    while next_toks = token_seq(@lexer, [:whitespace, :and, :whitespace, AndTerm])
       tokens = tokens + next_toks if next_toks
-    end while true
+    end
     return tokens
   end
 end
@@ -213,11 +209,9 @@ class OrTerm
     puts "Parsing OrTerm"
     tokens = token_seq(@lexer, [AndTerm])
 
-    begin
-      next_toks = token_seq(@lexer, [:whitespace, :or, :whitespace, AndTerm])
+    while next_toks = token_seq(@lexer, [:whitespace, :or, :whitespace, AndTerm])
       tokens = tokens + next_toks if next_toks
-    end while next_toks
-
+    end
     return tokens
   end
 end
