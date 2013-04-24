@@ -1,0 +1,28 @@
+* Query Parser
+  A recursive-descent recognizing parser for a toy search engine query
+  language. The original sepcification for the language has long since
+  disappeared, but it looks like the grammar is the following:
+  : Query = Whitespace? OrTerm Whitespace?
+  : OrTerm = AndTerm { Whitespace "OR" Whitespace AndTerm }*
+  : AndTerm = Term { Whitespace "AND" Whitespace Term }*
+  : Term = Pw | Exclusion | Inclusion | PrefixTerm | "(" Query ")"
+  : PrefixTerm = Word "*"
+  : Inclusion = "+" { Word | Phrase }
+  : Exclusion = "-" { Word | Phrase }
+  : WordSeq = Word { Whitespace Word }*
+  : Phrase = "\"" [^"]* "\""
+  : WordLetter = [:alnum:] | "@" | "%" | "$" | "&"
+  : Word = WordLetter { WordLetter | "-" }*
+  The grammar above is ambiguous, but since the parser is only a
+  validator, it's not clear what the original specification had to say
+  about associativity.
+
+  To run, execute =ruby query-parser.rb= and provide input on
+  =stdin=, one query per line. Alternatively, you can specify a
+  series of input files as arguments to the script (since it makes use
+  of =ARGF=). A sample input file is included as =query-input.txt=
+
+  The script will print the list of tokens produced by the tokenizer,
+  a trace of the parsing process, and finally either the success or
+  failure of the parser.
+

@@ -1,0 +1,9 @@
+cats dogs ponies
+"domestic pets" AND parakeet AND -snakes OR +gerbil
+ (cow OR goat ) AND ( hen OR rooster)
+pup* AND "rabies vaccination" AND +booster
+horse* OR pony AND (riding saddles stirrups)
+"chunky bacon" OR "fried eggs" AND -chicken
+bugs +lobstrosities -crustaceans "big hairy spiders"
+!not a valid query
+everyone, and I mean everyone, loves punctuation!
