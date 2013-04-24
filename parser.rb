@@ -62,7 +62,7 @@ def token_seq(lexer, tokens)
 
       read_tokens = read_tokens + toks
     else
-      raise TypeError, 'Token designator is not a Symbol or Class'
+      raise TypeError, "Token designator #{tok} is not a Symbol or Class"
     end
   end
 
