@@ -86,20 +86,14 @@ class WordSeq
 
   def parse()
     puts "Parsing WordSeq"
-    tokens = []
-    token = @lexer.nextToken
-    tokens << token
-    if token[0] != :word
-      @lexer.pushToken(token)
-      return false
-    end
-    
+    tokens = token_seq(@lexer, [:word])
+    return false unless tokens
+
     begin
-      token = @lexer.nextToken
-      tokens << token
-    end until token[0] != :word
-    @lexer.pushToken(token)
-    tokens.pop
+      toks = token_seq(@lexer, [:whitespace, :word])
+      tokens = tokens + toks[1] if toks
+    end while toks
+
     return tokens
   end
 end
@@ -111,20 +105,9 @@ class Pw
 
   def parse()
     puts "Parsing Pw"
-    tokens = []
-    token = @lexer.nextToken
-    tokens << token
-    if token[0] == :phrase
-      return tokens
-    end
-
-    @lexer.pushToken(token)
-    tokens.pop
-    word_tokens = WordSeq.new(@lexer).parse
-    if not word_tokens
-      return false
-    end
-    return word_tokens
+    tokens = token_choice(@lexer, [[:phrase],
+                                   [WordSeq]])
+    return tokens
   end
 end
 
@@ -135,13 +118,9 @@ class Exclusion
 
   def parse()
     puts "Parsing Exclusion"
-    tokens = []
-    token = @lexer.nextToken
-    tokens << token
-    if token[0] != :exclusion
-      @lexer.pushToken(token)
-      return false
-    end
+    tokens = token_choice(@lexer, [[:exclude_op, :word],
+                                   [:exclude_op, :phrase]])
+
     return tokens
   end
 end
@@ -153,13 +132,9 @@ class Inclusion
 
   def parse()
     puts "Parsing Inclusion"
-    tokens = []
-    token = @lexer.nextToken
-    tokens << token
-    if token[0] != :inclusion
-      @lexer.pushToken(token)
-      return false
-    end
+    tokens = token_choice(@lexer, [[:include_op, :word],
+                                   [:include_op, :phrase]])
+
     return tokens
   end
 end
@@ -171,13 +146,8 @@ class PrefixTerm
 
   def parse()
     puts "Parsing PrefixTerm"
-    tokens = []
-    token = @lexer.nextToken
-    tokens << token
-    if token[0] != :prefixterm
-      @lexer.pushToken(token)
-      return false
-    end
+    tokens = token_seq(@lexer, [:word, :star_op])
+
     return tokens
   end
 end
@@ -189,37 +159,24 @@ class Term
 
   def parse()
     puts "Parsing Term"
-    toks = Pw.new(@lexer).parse
-    return toks if toks
-    toks = Exclusion.new(@lexer).parse
-    return toks if toks
-    toks = Inclusion.new(@lexer).parse
-    return toks if toks
-    toks = PrefixTerm.new(@lexer).parse
-    return toks if toks
+    tokens = token_choice(@lexer, [[Exclusion],
+                                   [Inclusion],
+                                   [PrefixTerm],
+                                   [Pw]])
+    return tokens if tokens
 
-    tokens = []
-    token = @lexer.nextToken
-    tokens << token
-    if token[0] != :lparen
-      @lexer.pushToken(token)
-      return false
-    end
-    # Note that we use Orterm here instead of Query,
-    # since Query is not defined in our grammar.
-    toks = OrTerm.new(@lexer).parse
-    if not toks
-      @lexer.pushToken(token)
-      return false
-    end
-    toks.each { |tok| tokens << tok }
-    token2 = @lexer.nextToken
-    tokens << token2
-    if token2[0] != :rparen
-      tokens.reverse_each { |tok| @lexer.pushToken(tok) }
-      return false
-    end
-    return tokens
+    tokens = token_choice(@lexer, [[:lparen, :whitespace],
+                                   [:lparen]])
+    return false unless tokens
+
+    or_toks = token_seq(@lexer, [Query])
+    return unshift_toks(@lexer, tokens) unless or_toks
+    tokens = tokens + or_toks
+
+    end_toks = token_choice(@lexer, [[:whitespace, :rparen],
+                                     [:rparen]])
+    return unshift_toks(@lexer, tokens) unless end_toks
+    return tokens + end_toks
   end
 end
 
@@ -230,33 +187,16 @@ class AndTerm
 
   def parse()
     puts "Parsing AndTerm"
-    toks = Term.new(@lexer).parse
-    if not toks
-      return false
-    end
+    tokens = token_seq(@lexer, [Term])
+    return false unless tokens
 
-    new_toks = []
     begin
-      and_token = @lexer.nextToken
-      toks << and_token
-      if and_token[0] == :AND
-        new_toks = Term.new(@lexer).parse
-        new_toks.each { |tok| toks << tok }
-      end
-    end until and_token[0] != :AND or not new_toks
+      next_toks = token_seq(@lexer, [:whitespace, :and, :whitespace, AndTerm])
+      return tokens if not next_toks
 
-    if and_token[0] != :AND
-      @lexer.pushToken(and_token)
-      toks.pop
-      return toks
-    end
-
-    if not new_toks
-      @lexer.pushToken(and_token)
-      toks.reverse_each { |tok| @lexer.pushToken(tok) }
-      return false
-    end
-    return toks
+      tokens = tokens + next_toks if next_toks
+    end while true
+    return tokens
   end
 end
 
@@ -267,32 +207,30 @@ class OrTerm
 
   def parse()
     puts "Parsing OrTerm"
-    toks = AndTerm.new(@lexer).parse
-    if not toks
-      return false
-    end
+    tokens = token_seq(@lexer, [AndTerm])
 
-    new_toks = []
     begin
-      or_token = @lexer.nextToken
-      toks << or_token
-      if or_token[0] == :OR
-        new_toks = AndTerm.new(@lexer).parse
-        new_toks.each { |tok| toks << tok }
-      end
-    end until or_token[0] != :OR or not new_toks
+      next_toks = token_seq(@lexer, [:whitespace, :or, :whitespace, AndTerm])
+      tokens = tokens + next_toks if next_toks
+    end while next_toks
 
-    if or_token[0] != :OR
-      @lexer.pushToken(or_token)
-      toks.pop
-      return toks
-    end
+    return tokens
+  end
+end
 
-    if not new_toks
-      @lexer.pushToken(or_token)
-      toks.reverse_each { |tok| @lexer.pushToken(tok) }
-      return false
-    end
+class Query
+  def initialize(lexer)
+    @lexer = lexer
+  end
+
+  def parse()
+    puts "Parsing Query"
+    toks = token_choice(@lexer, [[:whitespace, OrTerm],
+                                 [OrTerm]])
+    return false unless toks
+
+    # Optional trailing whitespace
+    token_seq(@lexer, [:whitespace])
     return toks
   end
 end
