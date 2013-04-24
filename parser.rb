@@ -245,7 +245,7 @@ ARGF.each_line do |line|
   end until tok[0] == :unknown or tok[0] == :eof
   lex = Lexer.new(line)
   print "Parser/recognizer:"
-  tokens = OrTerm.new(lex).parse
+  tokens = Query.new(lex).parse
   if not tokens
     print false
     puts ": Recognizer failed"
