@@ -158,24 +158,17 @@ class Term
 
   def parse()
     puts "Parsing Term"
-    tokens = token_choice(@lexer, [[Exclusion],
-                                   [Inclusion],
-                                   [PrefixTerm],
-                                   [Pw]])
-    return tokens if tokens
-
-    tokens = token_choice(@lexer, [[:lparen, :whitespace],
-                                   [:lparen]])
-    return false unless tokens
-
-    or_toks = token_seq(@lexer, [Query])
-    return unshift_toks(@lexer, tokens) unless or_toks
-    tokens = tokens + or_toks
-
-    end_toks = token_choice(@lexer, [[:whitespace, :rparen],
-                                     [:rparen]])
-    return unshift_toks(@lexer, tokens) unless end_toks
-    return tokens + end_toks
+    tokens = token_choice(@lexer,
+                          [[Exclusion],
+                           [Inclusion],
+                           [PrefixTerm],
+                           [Pw],
+                           # Parenthesized expression w/ optional whitespace
+                           [:lparen, :whitespace, Query, :whitespace, :rparen],
+                           [:lparen, Query, :whitespace, :rparen],
+                           [:lparen, :whitespace, Query, :rparen],
+                           [:lparen, Query, :rparen]])
+    return tokens
   end
 end
 
