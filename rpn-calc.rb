@@ -1,80 +1,40 @@
-class Num
-  def initialize(num)
-    if num.include?('.')
-      @num = num.to_f
-    else
-      @num = num.to_i
+def node(name, blocks)
+  klass = Class.new do
+    blocks.each do |key, val|
+      define_method(key, &val)
+    end
+  end
+  Object.const_set(name.to_s, klass)
+end
+
+def op_node(name, op_char, method = op_char)
+  klass= Class.new do
+    define_method(:initialize) do |left, right|
+      @left = left
+      @right = right
+    end
+
+    define_method(:eval) do
+      return @left.eval.send(method, @right.eval)
+    end
+
+    define_method(:to_s) do
+      return "#{@left.to_s} #{@right.to_s} #{op_char} "
     end
   end
 
-  def eval()
-    return @num
-  end
-
-  def to_s()
-    return @num.to_s
-  end
+  Object.const_set(name.to_s, klass)
 end
 
-class Div
-  def initialize(left, right)
-    @left = left
-    @right = right
-  end
+node(:Num,
+     :initialize => lambda{ |num| @num = num.include?('.') ? num.to_f : num.to_i },
+     :eval => lambda{ return @num },
+     :to_s => lambda{ return @num.to_s })
 
-  def eval()
-    return @left.eval().quo(@right.eval())
-  end
-
-  def to_s()
-    return @left.to_s << " " << @right.to_s << " / "
-  end
-end
-
-class Add
-  def initialize(left, right)
-    @left = left
-    @right = right
-  end
-
-  def eval()
-    return @left.eval() + @right.eval()
-  end
-
-  def to_s()
-    return @left.to_s << " " << @right.to_s << " + "
-  end
-end
-
-class Sub
-  def initialize(left, right)
-    @left = left
-    @right = right
-  end
-
-  def eval()
-    return @left.eval() - @right.eval()
-  end
-
-  def to_s()
-    return @left.to_s << " " << @right.to_s << " - "
-  end
-end
-
-class Mult
-  def initialize(left, right)
-    @left = left
-    @right = right
-  end
-
-  def eval()
-    return @left.eval() * @right.eval()
-  end
-
-  def to_s()
-    return @left.to_s << " " << @right.to_s << " * "
-  end
-end
+op_node(:Div, '/', 'quo')
+op_node(:Add, '+')
+op_node(:Sub, '-')
+op_node(:Mult, '*')
 
 def parse(toks)
   stack = Array.new
