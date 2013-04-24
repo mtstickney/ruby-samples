@@ -23,8 +23,7 @@ class Lexer
       return @tokens.pop()
     end
 
-    token = self.streamToken
-    return token
+    return self.streamToken
   end
 
   def streamToken()
