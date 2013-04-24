@@ -38,27 +38,26 @@ op_node(:Mult, '*')
 
 def parse(toks)
   stack = Array.new
+  ops = ['/', '*', '+', '-']
   while toks.length != 0
     tok = toks.delete_at(0)
-    case tok
-    when "/"
+
+    if ops.include? tok
       right = stack.pop()
       left = stack.pop()
+    end
+
+    case tok
+    when "/"
       puts "Too few arguments to division operator" unless left and right
       stack.push(Div.new(left,right))
     when "+"
-      right = stack.pop()
-      left = stack.pop()
       puts "Too few arguments to addition operator" unless left and right
       stack.push(Add.new(left,right))
     when "-"
-      right = stack.pop()
-      left = stack.pop()
       puts "Too few arguments to subtraction operator" unless left and right
       stack.push(Sub.new(left,right))
     when "*"
-      right = stack.pop()
-      left = stack.pop()
       puts "Too few arguments to multiplication operator" unless left and right
       stack.push(Mult.new(left,right))
     else
