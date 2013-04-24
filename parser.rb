@@ -78,6 +78,17 @@ def token_choice(lexer, tokens)
   return false
 end
 
+def optional_seq(tok_seq)
+  klass = Class.new do
+    define_method(:initialize) { |lexer| @lexer = lexer }
+    define_method(:parse) do
+      return token_choice(@lexer, [tok_seq, []])
+    end
+  end
+
+  return klass
+end
+
 class WordSeq
   def initialize(lexer)
     @lexer = lexer
@@ -164,10 +175,11 @@ class Term
                            [PrefixTerm],
                            [Pw],
                            # Parenthesized expression w/ optional whitespace
-                           [:lparen, :whitespace, Query, :whitespace, :rparen],
-                           [:lparen, Query, :whitespace, :rparen],
-                           [:lparen, :whitespace, Query, :rparen],
-                           [:lparen, Query, :rparen]])
+                           [:lparen,
+                            optional_seq([:whitespace]),
+                            Query,
+                            optional_seq([:whitespace]),
+                            :rparen]])
     return tokens
   end
 end
@@ -217,13 +229,9 @@ class Query
 
   def parse()
     puts "Parsing Query"
-    toks = token_choice(@lexer, [[:whitespace, OrTerm],
-                                 [OrTerm]])
-    return false unless toks
-
-    # Optional trailing whitespace
-    token_seq(@lexer, [:whitespace])
-    return toks
+    return token_seq(@lexer, [optional_seq([:whitespace]),
+                              OrTerm,
+                              optional_seq([:whitespace])])
   end
 end
 
