@@ -26,3 +26,15 @@
   a trace of the parsing process, and finally either the success or
   failure of the parser.
 
+* Reverse-Polish Calculator
+  A calculator for expressions in Reverse-Polish notation. Supports
+  (possibly negative) integers and floats; all operators are binary.
+
+  To run, execute =ruby rpn-calc-rb= and provide input on =stdin=,
+  one expression per line. Alternatively, you can specify a series of
+  input files as arguments to the script; a sample input file is
+  included as =rpn-input.txt=.
+
+  The script will output a line per expression listing the expression
+  and its value. Note that all operands and their operators must be
+  separated by whitespace.
