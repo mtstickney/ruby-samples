@@ -434,21 +434,17 @@ class Board
   end
 end
 
-def with_drop(&block)
-  lambda do |board, evt|
-    if block.call board, evt
-      drop_rows = Range.new(board.shadow.top+board.shadow.y,
-                            board.shadow.bottom+board.shadow.y)
-      if drop_rows.include? 0 or drop_rows.include? 1
-        board.end_game
-      end
-
-      board.drop_piece
-      board.clear_rows drop_rows
-      board.spawn_piece (PieceType::T..PieceType::I).to_a.sample
-      board.reset_timer
-    end
+def do_drop(board)
+  drop_rows = Range.new(board.shadow.top+board.shadow.y,
+                        board.shadow.bottom+board.shadow.y)
+  if drop_rows.include? 0 or drop_rows.include? 1
+    board.end_game
   end
+
+  board.drop_piece
+  board.clear_rows drop_rows
+  board.spawn_piece (PieceType::T..PieceType::I).to_a.sample
+  board.reset_timer
 end
 
 SDL.init(SDL::INIT_VIDEO)
@@ -463,7 +459,7 @@ HLCOLOR = screen.format.mapRGB 255, 0, 0
 
 # Event procs
 cmds = {
-  :drop => with_drop { |board, evt| true },
+  :drop => lambda { |board, evt| do_drop(board) },
   :rotate => lambda { |board, evt| board.rotate_piece },
   :left => lambda do |board, evt|
     board.move_piece board.piece.x - 1, board.piece.y
@@ -486,14 +482,13 @@ cmds = {
         board.move_piece(board.piece.x + step, board.piece.y)
     end
   end,
-  :fall => with_drop do |board, evt|
-    # If we're already at the drop point, this is a drop
+  :fall => lambda do |board, evt|
+    # If we're already at the drop point, drop the piece
     if board.piece.x == board.shadow.x and board.piece.y == board.shadow.y
-      true
+      do_drop(board)
     else
-      ret = board.move_piece board.piece.x, board.piece.y + 1
+      board.move_piece board.piece.x, board.piece.y + 1
       board.reset_timer
-      ret
     end
   end
   }
