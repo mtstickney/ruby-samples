@@ -541,6 +541,9 @@ while not shutdown and not board.game_over
   board.render screen
 
   screen.flip
+
+  # Don't murder people's CPUs
+  sleep(0.025)
 end
 
 puts "Final score: #{board.score}"
