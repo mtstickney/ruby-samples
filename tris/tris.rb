@@ -423,7 +423,7 @@ def with_drop(&block)
 
       board.drop_piece
       board.clear_rows drop_rows
-      board.spawn_piece (1..7).to_a.sample
+      board.spawn_piece (PieceType::T..PieceType::I).to_a.sample
       board.reset_timer
     end
   end
@@ -482,7 +482,7 @@ cmds = {
 evts = []
 
 board = Board.new
-board.spawn_piece((1..7).to_a.sample)
+board.spawn_piece((PieceType::T..PieceType::I).to_a.sample)
 board.reset_timer
 
 shutdown = false
