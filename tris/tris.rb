@@ -434,6 +434,10 @@ class Board
   end
 end
 
+def random_piece
+  (PieceType::T..PieceType::I).to_a.sample
+end
+
 def do_drop(board)
   drop_rows = Range.new(board.shadow.top+board.shadow.y,
                         board.shadow.bottom+board.shadow.y)
@@ -443,7 +447,7 @@ def do_drop(board)
 
   board.drop_piece
   board.clear_rows drop_rows
-  board.spawn_piece (PieceType::T..PieceType::I).to_a.sample
+  board.spawn_piece random_piece
   board.reset_timer
 end
 
@@ -496,7 +500,7 @@ cmds = {
 evts = []
 
 board = Board.new
-board.spawn_piece((PieceType::T..PieceType::I).to_a.sample)
+board.spawn_piece random_piece
 board.reset_timer
 
 shutdown = false
