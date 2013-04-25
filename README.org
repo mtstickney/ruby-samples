@@ -38,3 +38,41 @@
   The script will output a line per expression listing the expression
   and its value. Note that all operands and their operators must be
   separated by whitespace.
+* Tris
+  An unpolished clone of Tetris. The fall rate doesn't speed up,
+  there's no soundtrack, the scoring is simplistic (1 point per line
+  cleared), and the fancier Tetris features like wall kicks aren't
+  implemented. On the other hand, it can be played with a mouse.
+
+  To run, execute =bundle install= from the =tris/= directory (you may
+  need to have SDL installed) to install the necessary gems (just
+  =rubysdl= for now). Then run =ruby tris.rb= and play to your heart's
+  content.
+
+** A Note About Quality
+   The code for this thing is probably terrible and very
+   un-Rubyish. It's the result of a day-long hack session, and is
+   loosely based on a C++ version of Tetris I did 4 or 5 years
+   ago. Things should be readable, but there isn't any really good
+   structure to the thing. One of the first places to make
+   improvements might be to consider the problem as an issue of
+   compositing a bunch of independent pieces together, rather than
+   flattening them to a shared matrix when they drop. Similarly, the
+   issue of moving and collisions needs a more formal approach (it
+   works as-is, but only by coincidence).
+
+** Controls
+   The keyboard controls should be familiar to long-time Tetris
+   players: the left and right arrow keys move the piece, up rotates
+   (counter-clockwise), and down does a hard drop. Incidentally, the
+   =p= key will print the current piece matrix to =stdout=, and =b=
+   will print the board's matrix. These aren't useful for the player,
+   but I left them in anyway.
+
+   The mouse controls should also be intuitive: moving the mouse left
+   and right should drag the piece back and forth (within the limits
+   of the walls and any blocks that are in the way), right click
+   rotates, and left click does a hard drop.
+
+   When the game exits (game over or the window is closed), your
+   score will be printed to =stdout=.
