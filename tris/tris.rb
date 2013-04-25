@@ -46,9 +46,14 @@ class Piece
     @x = x
     @y = y
     @rot = RotPosition::NONE
+    @bounds_cache = Hash.new
   end
 
   def width()
+    if @bounds_cache.has_key? [:width, @rot]
+      return @bounds_cache[[:width, @rot]]
+    end
+
     i = 0
     cols = @blocks.column_vectors
     cols.each_with_index do |vec, idx|
@@ -57,10 +62,15 @@ class Piece
       end
     end
 
+    @bounds_cache[[:width, @rot]] = i + 1
     return i + 1
   end
 
   def height()
+    if @bounds_cache.has_key? [:height, @rot]
+      return @bounds_cache[[:height, @rot]]
+    end
+
     i = 0
     rows = @blocks.row_vectors
     rows.each_with_index do |vec, idx|
@@ -69,7 +79,50 @@ class Piece
       end
     end
 
+    @bounds_cache[[:height, @rot]] = i + 1
     return i + 1
+  end
+
+  def top
+    if @bounds_cache.has_key? [:top, @rot]
+      return @bounds_cache[[:top, @rot]]
+    end
+
+    rows = @blocks.row_vectors
+    rows.each_with_index do |vec, idx|
+      if vec.inject(0) { |sum, i| sum + i } != 0
+        @bounds_cache[[:top, @rot]] = idx
+        return idx
+      end
+    end
+
+    @bounds_cache[[:top, @rot]] = -1
+    return -1
+  end
+
+  def bottom
+    return self.height - 1
+  end
+
+  def leftmost
+    if @bounds_cache.has_key? [:leftmost, @rot]
+      return @bounds_cache[[:leftmost, @rot]]
+    end
+
+    cols = @blocks.column_vectors
+    cols.each_with_index do |vec, idx|
+      if vec.inject(0) { |sum, i| sum + i } != 0
+        @bounds_cache[[:leftmost, @rot]] = idx
+        return idx
+      end
+    end
+
+    @bounds_cache[[:leftmost, @rot]] = -1
+    return -1
+  end
+
+  def rightmost
+    return self.width - 1
   end
 
   def render(screen, as_shadow = false)
@@ -84,7 +137,6 @@ class Piece
   end
 
   def rotate
-    @rot = (@rot + 1) % 4
     bound = [self.width, self.height].max
     newblocks = Matrix.build(4) do |y, x|
       if y < bound and x < bound
@@ -95,50 +147,12 @@ class Piece
       end
     end
     @blocks = newblocks
-  end
-
-  def collides(otherpiece)
-    otherpiece.each_with_index do |t, i, j|
-      return true if @blocks[i, j] != PieceType::NONE and t != PieceType::NONE
-    end
-    return false
+    @rot = (@rot + 1) % 4
   end
 
   def warp(x, y)
     @x = x
     @y = y
-  end
-
-  def top
-    i = -1
-    rows = @blocks.row_vectors
-    rows.each_with_index do |vec, idx|
-      if vec.inject(0) { |sum, i| sum + i } != 0
-        return idx
-      end
-    end
-
-    return i
-  end
-
-  def bottom
-    return self.height - 1
-  end
-
-  def leftmost
-    i = -1
-    cols = @blocks.column_vectors
-    cols.each_with_index do |vec, idx|
-      if vec.inject(0) { |sum, i| sum + i } != 0
-        return idx
-      end
-    end
-
-    return i
-  end
-
-  def rightmost
-    return self.width - 1
   end
 
   def print
