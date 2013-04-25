@@ -275,34 +275,56 @@ class Board
   end
 
   def move_piece(x, y)
-    @piece.warp(x, y)
+    canary = @piece.clone
+    canary.warp(x, y)
 
-    # Move it back on the board if necessary
-    if @piece.x + @piece.rightmost >= COLS
-      @piece.warp(COLS - @piece.width, @piece.y)
-    elsif @piece.x + @piece.leftmost < 0
-      @piece.warp(-@piece.leftmost, @piece.y)
+    leftmost = canary.leftmost
+    rightmost = canary.rightmost
+    top = canary.top
+    bottom = canary.bottom
+
+    if leftmost + canary.x < 0 or
+        rightmost + canary.x >= COLS or
+        top + canary.y < 0 or
+        bottom + canary.y >= ROWS
+      return false
     end
-    sync_shadow
 
-    return piece_collides(@piece)
+    if piece_collides(canary)
+      return false
+    end
+
+    @piece.warp(x, y)
+    sync_shadow
+    return true
   end
 
   def rotate_piece
-    @piece.rotate
-    @shadow.rotate
+    canary = @piece.dup
+    canary.rotate
 
     # Bump it back onto the board if necessary
-    if @piece.x + @piece.rightmost >= COLS
-      @piece.warp(COLS - @piece.width, @piece.y)
-    elsif @piece.x + @piece.leftmost < 0
-      @piece.warp(-@piece.leftmost, @piece.y)
+    if canary.x + canary.rightmost >= COLS
+      canary.warp(COLS - canary.width, @piece.y)
+    elsif canary.x + canary.leftmost < 0
+      canary.warp(-canary.leftmost, canary.y)
     end
 
+    # Can't push a piece back up or extend past the bottom
+    if canary.bottom + canary.y >= ROWS
+      return false
+    end
+
+    if piece_collides(canary)
+      return false
+    end
+
+    @piece.rotate
+    @piece.warp(canary.x, canary.y)
+    @shadow.rotate
     sync_shadow
 
-    # If it collides with anything on the board, trigger a drop
-    return piece_collides(@piece)
+    return true
   end
 
   def render(screen)
@@ -442,11 +464,11 @@ HLCOLOR = screen.format.mapRGB 255, 0, 0
 # Event procs
 cmds = {
   :drop => with_drop { |board, evt| true },
-  :rotate => with_drop { |board, evt| board.rotate_piece },
-  :left => with_drop do |board, evt|
+  :rotate => lambda { |board, evt| board.rotate_piece },
+  :left => lambda do |board, evt|
     board.move_piece board.piece.x - 1, board.piece.y
   end,
-  :right => with_drop do |board, evt|
+  :right => lambda do |board, evt|
     board.move_piece board.piece.x + 1, board.piece.y
   end,
   :print_board => lambda { |board, evt| board.print },
@@ -460,16 +482,8 @@ cmds = {
     step = mouse_col > piece_mid + board.piece.x ? 1 : -1
     # Move the piece until it reaches the mouse point or hits an
     # obstacle/wall
-    while mouse_col != piece_mid + board.piece.x
-      if (step < 0 and board.piece.x + leftmost == 0) or
-          (step > 0 and board.piece.x + rightmost == COLS - 1)
-        break
-      end
-
-      if board.move_piece(board.piece.x + step, board.piece.y)
-        board.move_piece(board.piece.x - step, board.piece.y)
-        break
-      end
+    while mouse_col != piece_mid + board.piece.x and
+        board.move_piece(board.piece.x + step, board.piece.y)
     end
   end,
   :fall => with_drop do |board, evt|
