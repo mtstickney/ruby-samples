@@ -473,9 +473,14 @@ cmds = {
     end
   end,
   :fall => with_drop do |board, evt|
-    ret = board.move_piece board.piece.x, board.piece.y + 1
-    board.reset_timer
-    ret
+    # If we're already at the drop point, this is a drop
+    if board.piece.x == board.shadow.x and board.piece.y == board.shadow.y
+      true
+    else
+      ret = board.move_piece board.piece.x, board.piece.y + 1
+      board.reset_timer
+      ret
+    end
   end
   }
 
